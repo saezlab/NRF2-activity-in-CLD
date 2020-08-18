@@ -43,3 +43,7 @@ docs/
 
 # translation temp files
 po/*~
+
+# ignore raw data of pediatric cohort
+data/pediatric_nafld_cohort/*
+data/adult_nafld_cohort/*.csv
