@@ -31,6 +31,8 @@ vignettes/*.pdf
 *_cache/
 /cache/
 
+*_files/
+
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
@@ -49,3 +51,7 @@ data/pediatric_nafld_cohort/*.txt
 data/pediatric_nafld_cohort/*.txt
 data/pediatric_nafld_cohort/*.xlsx
 data/adult_nafld_cohort/*.csv
+
+# ignore intermediate results
+output/pediatric_nafld_cohort/*.rds
+output/adult_nafld_cohort/*.rds
