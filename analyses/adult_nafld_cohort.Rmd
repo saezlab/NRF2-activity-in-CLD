@@ -183,3 +183,8 @@ norm_expr %>%
   select(-data)
 ```
 
+# Sessioninfo
+```{r}
+sessionInfo()
+```
+
