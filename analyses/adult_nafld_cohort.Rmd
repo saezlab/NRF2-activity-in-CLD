@@ -113,7 +113,10 @@ tf_scores %>%
   geom_boxplot() +
   geom_jitter(alpha = 0.3) +
   theme(legend.position = "none") +
-  ggpubr::stat_compare_means(method = "anova")
+  stat_compare_means(comparisons = list(c("0", "1"), c("1", "2"), 
+                                        c("0", "2"))) +
+  ggpubr::stat_compare_means(method = "anova") +
+  geom_smooth(method = "lm", se = FALSE, color = "yellow", aes(group = 1))
 
 # linear models
 tf_scores %>%
@@ -150,7 +153,10 @@ norm_expr %>%
   geom_boxplot() +
   geom_jitter(alpha = 0.3) +
   theme(legend.position = "none") +
-  ggpubr::stat_compare_means(method = "anova")
+  stat_compare_means(comparisons = list(c("0", "1"), c("1", "2"), 
+                                        c("0", "2"))) +
+  ggpubr::stat_compare_means(method = "anova") +
+  geom_smooth(method = "lm", se = FALSE, color = "yellow", aes(group = 1))
 
 # linear models
 norm_expr %>%
