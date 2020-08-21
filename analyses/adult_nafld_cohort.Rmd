@@ -106,22 +106,40 @@ tf_scores = run_viper(norm_expr, dorothea_hs,
 ## TF activity of NFE2L2
 Here we show how the activity of NFE2L2 changes with different lobular inflammation stages. To access the significance, an anova (including linear models) and correlation analysis is performed.
 ```{r "nfe2l2 activity", message=FALSE, warning=FALSE}
-tf_scores %>% 
+a = tf_scores %>% 
   left_join(meta, by="sample") %>%
-  filter(tf %in% "NFE2L2") %>%
+  filter(tf %in% "NFE2L2") 
+
+a %>%
   ggplot(aes(x=lobular_inflammation, y=activity, fill=lobular_inflammation)) +
   geom_boxplot() +
   geom_jitter(alpha = 0.3) +
   theme(legend.position = "none") +
-  stat_compare_means(comparisons = list(c("0", "1"), c("1", "2"), 
-                                        c("0", "2"))) +
   ggpubr::stat_compare_means(method = "anova") +
+  stat_compare_means(comparisons = list(c("none", "mild"), c("mild", "severe"), 
+                                        c("none", "severe"))) +
   geom_smooth(method = "lm", se = FALSE, color = "yellow", aes(group = 1))
 
+
+# anova
+a %>%
+  nest(data = -tf) %>%
+  mutate(aov = data %>% map(~broom::tidy(
+    aov(activity~lobular_inflammation, data = .)))) %>%
+  select(-data) %>%
+  unnest(aov)
+
+# anova post hoc test
+a %>%
+  nest(data = -tf) %>%
+  mutate(tukey = data %>% map(~broom::tidy(
+    TukeyHSD(aov(activity~lobular_inflammation, data = .))))) %>%
+  unnest(tukey) %>%
+  select(-data, -null.value)
+  
+
 # linear models
-tf_scores %>%
-  left_join(meta, by="sample") %>%
-  filter(tf %in% "NFE2L2") %>%
+a %>%
   nest(data = -tf) %>%
   mutate(lm = data %>% map(~broom::tidy(
     lm(activity~lobular_inflammation, data = .)))) %>%
@@ -130,9 +148,7 @@ tf_scores %>%
   select(-data)
 
 # correlations
-tf_scores %>%
-  left_join(meta, by="sample") %>%
-  filter(tf %in% "NFE2L2") %>%
+a %>%
   mutate_if(is.factor, as.numeric) %>%
   nest(data = -tf) %>%
   mutate(r = data %>% map(~broom::tidy(
@@ -145,24 +161,39 @@ tf_scores %>%
 ## TF expression of NFE2L2
 Here we show how the expression of NFE2L2 changes with different lobular inflammation stages. To access the significance, an anova (including linear models) and correlation analysis is performed.
 ```{r "nfe2l2 expression", message=FALSE, warning=FALSE}
-norm_expr %>%
+e = norm_expr %>%
   tdy("gene", "sample", "expression") %>%
   left_join(meta, by="sample") %>%
-  filter(gene %in% "NFE2L2") %>%  
+  filter(gene %in% "NFE2L2")
+
+e %>%  
   ggplot(aes(x=lobular_inflammation, y=expression, fill=lobular_inflammation)) +
   geom_boxplot() +
   geom_jitter(alpha = 0.3) +
   theme(legend.position = "none") +
-  stat_compare_means(comparisons = list(c("0", "1"), c("1", "2"), 
-                                        c("0", "2"))) +
+  stat_compare_means(comparisons = list(c("none", "mild"), c("mild", "severe"), 
+                                        c("none", "severe"))) +
   ggpubr::stat_compare_means(method = "anova") +
   geom_smooth(method = "lm", se = FALSE, color = "yellow", aes(group = 1))
 
+# anova 
+e %>%
+  nest(data = -gene) %>%
+  mutate(aov = data %>% map(~broom::tidy(
+    aov(expression~lobular_inflammation, data = .)))) %>%
+  select(-data) %>%
+  unnest(aov)
+
+# anova post hoc test
+e %>%
+  nest(data = -gene) %>%
+  mutate(tukey = data %>% map(~broom::tidy(
+    TukeyHSD(aov(expression~lobular_inflammation, data = .))))) %>%
+  unnest(tukey) %>%
+  select(-data, -null.value)
+
 # linear models
-norm_expr %>%
-  tdy("gene", "sample", "expression") %>%
-  left_join(meta, by="sample") %>%
-  filter(gene %in% "NFE2L2") %>%
+e %>%
   nest(data = -gene) %>%
   mutate(lm = data %>% map(~broom::tidy(lm(expression~lobular_inflammation, 
                                            data = .)))) %>%
@@ -171,10 +202,7 @@ norm_expr %>%
   select(-data)
 
 # correlation
-norm_expr %>%
-  tdy("gene", "sample", "expression") %>%
-  left_join(meta, by="sample") %>%
-  filter(gene %in% "NFE2L2") %>%
+e %>%
   mutate_if(is.factor, as.numeric) %>%
   nest(data = -gene) %>%
   mutate(r = data %>% map(~tidy(cor.test(~expression + lobular_inflammation, 

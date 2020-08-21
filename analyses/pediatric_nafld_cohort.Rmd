@@ -145,9 +145,11 @@ tf_scores = run_viper(norm_expr, dorothea_hs,
 ## TF activity of NFE2L2
 Here we show how the activity of NFE2L2 changes with different lobular inflammation stages. To access the significance, an anova (including linear models) and correlation analysis is performed.
 ```{r "nfe2l2 activity", message=FALSE, warning=FALSE}
-tf_scores %>% 
+a = tf_scores %>% 
   left_join(meta, by="sample") %>%
-  filter(tf %in% "NFE2L2") %>%
+  filter(tf %in% "NFE2L2") 
+
+a %>%
   ggplot(aes(x=inflammation_portal, y=activity, fill=inflammation_portal)) +
   geom_boxplot() +
   geom_jitter(alpha = 0.3) +
@@ -157,10 +159,26 @@ tf_scores %>%
                                         c("none", "severe"))) +
   geom_smooth(method = "lm", se = FALSE, color = "yellow", aes(group = 1))
 
+
+# anova
+a %>%
+  nest(data = -tf) %>%
+  mutate(aov = data %>% map(~broom::tidy(
+    aov(activity~inflammation_portal, data = .)))) %>%
+  select(-data) %>%
+  unnest(aov)
+
+# anova post hoc test
+a %>%
+  nest(data = -tf) %>%
+  mutate(tukey = data %>% map(~broom::tidy(
+    TukeyHSD(aov(activity~inflammation_portal, data = .))))) %>%
+  unnest(tukey) %>%
+  select(-data, -null.value)
+  
+
 # linear models
-tf_scores %>%
-  left_join(meta, by="sample") %>%
-  filter(tf %in% "NFE2L2") %>%
+a %>%
   nest(data = -tf) %>%
   mutate(lm = data %>% map(~broom::tidy(
     lm(activity~inflammation_portal, data = .)))) %>%
@@ -169,9 +187,7 @@ tf_scores %>%
   select(-data)
 
 # correlations
-tf_scores %>%
-  left_join(meta, by="sample") %>%
-  filter(tf %in% "NFE2L2") %>%
+a %>%
   mutate_if(is.factor, as.numeric) %>%
   nest(data = -tf) %>%
   mutate(r = data %>% map(~broom::tidy(
@@ -184,10 +200,12 @@ tf_scores %>%
 ## TF expression of NFE2L2
 Here we show how the expression of NFE2L2 changes with different lobular inflammation stages. To access the significance, an anova (including linear models) and correlation analysis is performed.
 ```{r "nfe2l2 expression", message=FALSE, warning=FALSE}
-norm_expr %>%
+e = norm_expr %>%
   tdy("gene", "sample", "expression") %>%
   left_join(meta, by="sample") %>%
-  filter(gene %in% "NFE2L2") %>%  
+  filter(gene %in% "NFE2L2")
+
+e %>%  
   ggplot(aes(x=inflammation_portal, y=expression, fill=inflammation_portal)) +
   geom_boxplot() +
   geom_jitter(alpha = 0.3) +
@@ -197,11 +215,24 @@ norm_expr %>%
   ggpubr::stat_compare_means(method = "anova") +
   geom_smooth(method = "lm", se = FALSE, color = "yellow", aes(group = 1))
 
+# anova 
+e %>%
+  nest(data = -gene) %>%
+  mutate(aov = data %>% map(~broom::tidy(
+    aov(expression~inflammation_portal, data = .)))) %>%
+  select(-data) %>%
+  unnest(aov)
+
+# anova post hoc test
+e %>%
+  nest(data = -gene) %>%
+  mutate(tukey = data %>% map(~broom::tidy(
+    TukeyHSD(aov(expression~inflammation_portal, data = .))))) %>%
+  unnest(tukey) %>%
+  select(-data, -null.value)
+
 # linear models
-norm_expr %>%
-  tdy("gene", "sample", "expression") %>%
-  left_join(meta, by="sample") %>%
-  filter(gene %in% "NFE2L2") %>%
+e %>%
   nest(data = -gene) %>%
   mutate(lm = data %>% map(~broom::tidy(lm(expression~inflammation_portal, 
                                            data = .)))) %>%
@@ -210,10 +241,7 @@ norm_expr %>%
   select(-data)
 
 # correlation
-norm_expr %>%
-  tdy("gene", "sample", "expression") %>%
-  left_join(meta, by="sample") %>%
-  filter(gene %in% "NFE2L2") %>%
+e %>%
   mutate_if(is.factor, as.numeric) %>%
   nest(data = -gene) %>%
   mutate(r = data %>% map(~tidy(cor.test(~expression + inflammation_portal, 
