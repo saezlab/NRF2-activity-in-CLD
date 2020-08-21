@@ -2,6 +2,7 @@
 title: "NFE2L2 activitiy in adult NAFLD cohort"
 author: 
   - Christian H. Holland^[Faculty of Medicine, Institute of Computational Biomedicine, Heidelberg University, Bioquant, Heidelberg, Germany, christian.holland@bioquant.uni-heidelberg.de]
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
     df_print: paged
